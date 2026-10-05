@@ -7,10 +7,16 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+# اگر push پشت‌سرهم زدی، run قبلی را قطع نکن تا APK نیمه‌کاره نماند
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   analyze:
     name: Analyze & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +27,6 @@ jobs:
 
       - run: flutter pub get
 
-      # خروجی analyze فقط گزارش است؛ exit را صفر می‌کنیم تا CI به‌خاطر info/deprecated نشکند
       - name: Analyze
         run: |
           flutter analyze --no-fatal-infos --no-fatal-warnings || true
@@ -33,7 +38,7 @@ jobs:
   build-apk:
     name: Build APK (debug)
     runs-on: ubuntu-latest
-    # مستقل از analyze تا همیشه APK ساخته شود
+    timeout-minutes: 45
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
@@ -48,14 +53,27 @@ jobs:
           channel: stable
           cache: true
 
-      - run: flutter pub get
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
 
       - name: Build APK debug
-        run: flutter build apk --debug
+        run: flutter build apk --debug --verbose
+        timeout-minutes: 35
+
+      - name: List output
+        if: always()
+        run: |
+          ls -la build/app/outputs/flutter-apk/ || true
+          find build -name "*.apk" 2>/dev/null || true
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: nozhin-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14
+          if-no-files-found: error
