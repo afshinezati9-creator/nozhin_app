@@ -1,1 +1,54 @@
+<<<<<<< HEAD
 bmFtZTogRmx1dHRlciBDSQoKb246CiAgcHVzaDoKICAgIGJyYW5jaGVzOgogICAgICAtIG1haW4KICBwdWxsX3JlcXVlc3Q6CiAgICBicmFuY2hlczoKICAgICAgLSBtYWluCiAgd29ya2Zsb3dfZGlzcGF0Y2g6Cgpjb25jdXJyZW5jeToKICBncm91cDogbm96aGluLWZsdXR0ZXItJHt7IGdpdGh1Yi5yZWYgfX0KICBjYW5jZWwtaW4tcHJvZ3Jlc3M6IHRydWUKCmpvYnM6CiAgYW5hbHl6ZToKICAgIG5hbWU6IEFuYWx5emUgRmx1dHRlcgogICAgcnVucy1vbjogdWJ1bnR1LTI0LjA0CiAgICB0aW1lb3V0LW1pbnV0ZXM6IDIwCiAgICBzdGVwczoKICAgICAgLSBuYW1lOiBDaGVja291dAogICAgICAgIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKCiAgICAgIC0gbmFtZTogU2V0dXAgRmx1dHRlcgogICAgICAgIHVzZXM6IHN1Ym9zaXRvL2ZsdXR0ZXItYWN0aW9uQHYyCiAgICAgICAgd2l0aDoKICAgICAgICAgIGNoYW5uZWw6IHN0YWJsZQogICAgICAgICAgY2FjaGU6IHRydWUKCiAgICAgIC0gbmFtZTogRmx1dHRlciBkb2N0b3IKICAgICAgICBydW46IGZsdXR0ZXIgZG9jdG9yIC12CgogICAgICAtIG5hbWU6IEdldCBwYWNrYWdlcwogICAgICAgIHJ1bjogZmx1dHRlciBwdWIgZ2V0CgogICAgICAtIG5hbWU6IEFuYWx5emUKICAgICAgICBydW46IGZsdXR0ZXIgYW5hbHl6ZSB8fCB0cnVlCgogIGJ1aWxkLWFwazoKICAgIG5hbWU6IEJ1aWxkIEFuZHJvaWQgQVBLCiAgICBydW5zLW9uOiB1YnVudHUtMjQuMDQKICAgIHRpbWVvdXQtbWludXRlczogNjAKICAgIG5lZWRzOiBhbmFseXplCiAgICBpZjogZ2l0aHViLmV2ZW50X25hbWUgPT0gJ3B1c2gnIHx8IGdpdGh1Yi5ldmVudF9uYW1lID09ICd3b3JrZmxvd19kaXNwYXRjaCcKCiAgICBzdGVwczoKICAgICAgLSBuYW1lOiBDaGVja291dAogICAgICAgIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKCiAgICAgIC0gbmFtZTogU2V0dXAgSmF2YSAxNwogICAgICAgIHVzZXM6IGFjdGlvbnMvc2V0dXAtamF2YUB2NAogICAgICAgIHdpdGg6CiAgICAgICAgICBkaXN0cmlidXRpb246IHRlbXVyaW4KICAgICAgICAgIGphdmEtdmVyc2lvbjogJzE3JwoKICAgICAgLSBuYW1lOiBTZXR1cCBGbHV0dGVyCiAgICAgICAgdXNlczogc3Vib3NpdG8vZmx1dHRlci1hY3Rpb25AdjIKICAgICAgICB3aXRoOgogICAgICAgICAgY2hhbm5lbDogc3RhYmxlCiAgICAgICAgICBjYWNoZTogdHJ1ZQoKICAgICAgLSBuYW1lOiBGbHV0dGVyIGRvY3RvcgogICAgICAgIHJ1bjogZmx1dHRlciBkb2N0b3IgLXYKCiAgICAgIC0gbmFtZTogR2V0IHBhY2thZ2VzCiAgICAgICAgcnVuOiBmbHV0dGVyIHB1YiBnZXQKCiAgICAgIC0gbmFtZTogQnVpbGQgQVBLIERlYnVnCiAgICAgICAgcnVuOiBmbHV0dGVyIGJ1aWxkIGFwayAtLWRlYnVnCgogICAgICAtIG5hbWU6IENoZWNrIEFQSwogICAgICAgIHJ1bjogbHMgLWxoIGJ1aWxkL2FwcC9vdXRwdXRzL2ZsdXR0ZXItYXBrLwoKICAgICAgLSBuYW1lOiBVcGxvYWQgQVBLCiAgICAgICAgdXNlczogYWN0aW9ucy91cGxvYWQtYXJ0aWZhY3RAdjQKICAgICAgICB3aXRoOgogICAgICAgICAgbmFtZTogbm96aGluLWRlYnVnLWFwawogICAgICAgICAgcGF0aDogYnVpbGQvYXBwL291dHB1dHMvZmx1dHRlci1hcGsvYXBwLWRlYnVnLmFwawogICAgICAgICAgcmV0ZW50aW9uLWRheXM6IDE0CiAgICAgICAgICBpZi1uby1maWxlcy1mb3VuZDogZXJyb3IK
+=======
+# ساخت APK روی GitHub (برای کاربرانی که به‌خاطر تحریم نمی‌توانند SDK گوگل را دانلود کنند)
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # دکمه Run workflow در تب Actions
+
+concurrency:
+  group: flutter-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # فقط یک job = کمتر فشار روی صف runner
+  build-apk:
+    name: Build APK (debug)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Doctor (info)
+        run: flutter doctor -v || true
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nozhin-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30
+          if-no-files-found: error
+>>>>>>> f8e6529 (CI: APK-only job for sanctioned regions)
