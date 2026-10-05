@@ -186,7 +186,7 @@ class MonthStripShamsi extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
                 color: has
-                    ? color.withOpacity(0.15 + (score!.clamp(1, 5) / 5) * 0.35)
+                    ? color.withOpacity(0.15 + (score.clamp(1, 5) / 5) * 0.35)
                     : theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(12),
                 border: isToday

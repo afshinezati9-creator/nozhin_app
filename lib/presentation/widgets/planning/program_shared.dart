@@ -396,7 +396,6 @@ class TextDirToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isRtl = direction == TextDirection.rtl;
     return SegmentedButton<TextDirection>(
       style: const ButtonStyle(
         visualDensity: VisualDensity.compact,

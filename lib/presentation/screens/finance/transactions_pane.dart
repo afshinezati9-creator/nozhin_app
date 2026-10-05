@@ -8,7 +8,6 @@ import '../../../core/utils/persian_amount_words.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/app_search_bar.dart';
-import '../../../domain/entities/account_entity.dart';
 import '../../../domain/entities/transaction_entity.dart';
 import '../../providers/finance_provider.dart';
 
