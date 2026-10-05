@@ -1,0 +1,31 @@
+نصب صحیح پروژه نوژین روی ویندوز
+================================
+
+1) پوشه قدیمی را پاک کن:
+   rmdir /s /q C:\Users\1\Desktop\nozhin_app
+
+2) زیپ nozhin_app_full.zip را Extract کن تا پوشه nozhin_app ساخته شود
+   (باید داخلش پوشه lib و فایل pubspec.yaml دیده شود)
+
+3) فقط اگر پوشه android یا web نبود این را بزن:
+   cd C:\Users\1\Desktop\nozhin_app
+   flutter create . --org com.nozhin --project-name nozhin
+
+   توجه: flutter create را روی پوشه خالی نزن؛ اول باید lib و pubspec از زیپ باشد.
+
+4) سپس:
+   flutter pub get
+   flutter run -d chrome
+
+اگر صفحه "Flutter Demo Home Page" دیدی یعنی فقط اپ پیش‌فرض ساخته شده و زیپ استخراج نشده است.
+
+
+---
+اندروید واقعی و گیت‌هاب
+------------------------
+1) همین پوشه را به GitHub push کن (بدون keystore).
+2) flutter create . --org com.nozhin --project-name nozhin
+3) flutter pub get
+4) برای اثرانگشت روی دستگاه واقعی تست کن (وب پشتیبانی کامل ندارد).
+5) راهنمای امنیت پلی: ANDROID_PLAY_SECURITY.md
+6) flutter build appbundle --release
