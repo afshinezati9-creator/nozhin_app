@@ -71,3 +71,19 @@ flutter run
 ## و) قبل از انتشار عمومی
 
 - بخش «دیباگ (موقت)» و فایل‌های `debug_log_service` / `debug_export` را حذف کنید (`DEBUG_REMOVE_BEFORE_RELEASE.md`).
+
+
+## ز) GitHub Actions (بعد از push)
+
+1. پوشه workflow را هم push کن:
+   ```
+   git add .github/workflows/flutter_ci.yml
+   git commit -m "Add Flutter CI workflow"
+   git push
+   ```
+2. در گیت‌هاب برو به **Actions** → باید workflow **Flutter CI** اجرا شود.
+3. بعد از سبز شدن job **Build APK**، از بخش Artifacts فایل `nozhin-debug-apk` را دانلود کن.
+
+**مهم:** این APK برای تست است (debug). برای پلی استور هنوز باید روی سیستم خودت `flutter build appbundle --release` با keystore بزنی.
+
+روی صفحه "Get started with GitHub Actions" لازم نیست workflow پیشنهادی **Dart** را Configure کنی — همان فایل `flutter_ci.yml` کافی است.
