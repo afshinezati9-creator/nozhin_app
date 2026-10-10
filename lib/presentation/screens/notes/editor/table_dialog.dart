@@ -28,6 +28,11 @@ class _TableInsertDialogState extends State<TableInsertDialog> {
   double _colWidth = 100;
   int? _focusR;
   int? _focusC;
+  bool _headerRow = true;
+  bool _altRows = true;
+  bool _showGrid = true;
+  int _maxRows = 30;
+  int _maxCols = 12;
 
   @override
   void initState() {
@@ -101,6 +106,9 @@ class _TableInsertDialogState extends State<TableInsertDialog> {
       'cols': cols,
       'excel': true,
       'colWidth': _colWidth,
+      'headerRow': _headerRow,
+      'altRows': _altRows,
+      'showGrid': _showGrid,
       'data': cells.map((row) => row.map((c) => c.text).toList()).toList(),
     };
   }
@@ -229,6 +237,109 @@ class _TableInsertDialogState extends State<TableInsertDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+
+            // تنظیمات بیشتر اکسل
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.outline),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('تنظیمات جدول',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      FilterChip(
+                        label: const Text('ردیف عنوان'),
+                        selected: _headerRow,
+                        onSelected: (v) => setState(() => _headerRow = v),
+                      ),
+                      FilterChip(
+                        label: const Text('ردیف راه‌راه'),
+                        selected: _altRows,
+                        onSelected: (v) => setState(() => _altRows = v),
+                      ),
+                      FilterChip(
+                        label: const Text('نمایش خطوط'),
+                        selected: _showGrid,
+                        onSelected: (v) => setState(() => _showGrid = v),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('عرض ستون: ${_colWidth.round()}',
+                      style: theme.textTheme.labelSmall),
+                  Slider(
+                    value: _colWidth.clamp(60, 180),
+                    min: 60,
+                    max: 180,
+                    divisions: 12,
+                    label: '${_colWidth.round()}',
+                    onChanged: (v) => setState(() => _colWidth = v),
+                  ),
+                  Row(
+                    children: [
+                      Text('سطر ${rows}', style: theme.textTheme.labelMedium),
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: rows > 2
+                            ? () => setState(() {
+                                  rows--;
+                                  _rebuild(keepData: true);
+                                })
+                            : null,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: rows < _maxRows
+                            ? () => setState(() {
+                                  rows++;
+                                  _rebuild(keepData: true);
+                                })
+                            : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Text('ستون ${cols}', style: theme.textTheme.labelMedium),
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: cols > 2
+                            ? () => setState(() {
+                                  cols--;
+                                  _rebuild(keepData: true);
+                                })
+                            : null,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: cols < _maxCols
+                            ? () => setState(() {
+                                  cols++;
+                                  _rebuild(keepData: true);
+                                })
+                            : null,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'فرمول: روی سلول کلیک کن، SUM/AVG/MIN/MAX بزن، بعد «محاسبه». یا بنویس =10+5',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.55),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
               Row(
                 children: [
                   Container(

@@ -7,12 +7,14 @@ import '../../presentation/widgets/nozhin_logo.dart';
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onThemeToggle;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onLogoTap;
   final bool isDark;
 
   const AppHeader({
     super.key,
     this.onThemeToggle,
     this.onSettingsTap,
+    this.onLogoTap,
     this.isDark = false,
   });
 
@@ -66,9 +68,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const HawzhinLogo(
-                size: 42,
-                variant: HawzhinLogoVariant.bookLeaf,
+              GestureDetector(
+                onTap: onLogoTap ?? onSettingsTap,
+                child: const HawzhinLogo(
+                  size: 42,
+                  variant: HawzhinLogoVariant.bookLeaf,
+                ),
               ),
             ],
           ),

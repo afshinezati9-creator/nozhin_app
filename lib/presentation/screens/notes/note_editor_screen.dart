@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../core/services/note_audio_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/jalali.dart';
 import '../../../domain/entities/note_entity.dart';
@@ -385,11 +387,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _toggleVoice() async {
     if (_recording) {
       setState(() => _recording = false);
-      final meta = jsonEncode({
-        'duration': _recordSeconds.clamp(1, 9999),
-        'label': 'ضبط صوتی',
-        'mime': 'audio/webm',
-      });
+      final metaMap = await NoteAudioService.instance.stop();
+      if (metaMap == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('ضبط ذخیره نشد'),
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+        return;
+      }
+      final meta = jsonEncode(metaMap);
       final index =
           _quill.selection.baseOffset.clamp(0, _quill.document.length - 1);
       _quill.document.insert(index, BlockEmbed('audio', meta));
@@ -402,6 +410,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       setState(() {});
       return;
     }
+    final ok = await NoteAudioService.instance.start();
+    if (!ok) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('دسترسی میکروفون لازم است — در تنظیمات گوشی فعال کن'),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+      return;
+    }
     setState(() {
       _recording = true;
       _recordSeconds = 0;
@@ -412,6 +430,59 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       setState(() => _recordSeconds++);
       return _recording;
     });
+  }
+
+  Future<void> _pickAudioFile() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['mp3', 'm4a', 'wav', 'aac', 'ogg', 'flac'],
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final f = result.files.first;
+      final bytes = f.bytes;
+      if (bytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('نتوانست فایل را بخواند'),
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+        return;
+      }
+      final metaMap = await NoteAudioService.instance.importBytes(
+        bytes,
+        name: f.name,
+        mime: 'audio/${f.extension ?? 'mpeg'}',
+      );
+      if (metaMap == null || metaMap['error'] != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('${metaMap?['error'] ?? 'خطا در ورود فایل'}'),
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+        return;
+      }
+      final meta = jsonEncode(metaMap);
+      final index =
+          _quill.selection.baseOffset.clamp(0, _quill.document.length - 1);
+      _quill.document.insert(index, BlockEmbed('audio', meta));
+      _quill.document.insert(index + 1, '\n');
+      _quill.updateSelection(
+        TextSelection.collapsed(offset: index + 2),
+        ChangeSource.local,
+      );
+      setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('خطا: $e'),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
   }
 
   Future<void> _showTableDialog({bool excel = true}) async {
@@ -1440,10 +1511,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ),
           _toolBtn(icon: Icons.image_outlined, tip: 'تصویر', onTap: _pickImage),
           _toolBtn(
-              icon: _recording ? Icons.stop_circle_outlined : Icons.mic_rounded,
-              tip: _recording ? 'توقف' : 'ویس',
-              color: _recording ? AppColors.danger : null,
-              onTap: _toggleVoice),
+            icon: _recording ? Icons.stop_circle_outlined : Icons.mic_rounded,
+            tip: _recording ? 'توقف ضبط' : 'ضبط صدا',
+            color: _recording ? AppColors.danger : null,
+            onTap: _toggleVoice,
+          ),
+          _toolBtn(
+            icon: Icons.library_music_outlined,
+            tip: 'آپلود فایل صوتی',
+            onTap: _pickAudioFile,
+          ),
           _toolBtn(icon: Icons.emoji_emotions_outlined, tip: 'ایموجی', onTap: () => _showSymbolPicker(emojis, 'ایموجی')),
         ]);
 

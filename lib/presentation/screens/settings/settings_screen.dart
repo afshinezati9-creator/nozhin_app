@@ -126,28 +126,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
-              Text('نوع فونت', style: theme.textTheme.bodyMedium),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  _ThemeChip(
-                    label: 'وزیرمتن',
-                    selected: themeState.fontFamily == 'Vazirmatn',
-                    onTap: () => ref
-                        .read(themeProvider.notifier)
-                        .setFontFamily('Vazirmatn'),
-                  ),
-
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'فونت‌ها از پوشه assets/fonts بارگذاری می‌شوند (آفلاین).',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.5),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -320,10 +298,69 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   );
                 },
               ),
+              FutureBuilder<BiometricStatus>(
+                future: BiometricService.instance.status(),
+                builder: (context, st) {
+                  final s = st.data;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('وضعیت اثرانگشت روی این دستگاه'),
+                    subtitle: Text(
+                      s?.messageFa ??
+                          (kIsWeb
+                              ? 'روی وب در دسترس نیست'
+                              : 'در حال بررسی حسگر...'),
+                    ),
+                    leading: Icon(
+                      (s?.ready ?? false)
+                          ? Icons.fingerprint_rounded
+                          : Icons.fingerprint_outlined,
+                      color: (s?.ready ?? false)
+                          ? AppColors.brand3
+                          : theme.colorScheme.onSurface.withOpacity(0.45),
+                    ),
+                    onTap: () async {
+                      final status = await BiometricService.instance.status();
+                      if (!context.mounted) return;
+                      await showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('اثرانگشت چگونه فعال می‌شود؟'),
+                          content: SingleChildScrollView(
+                            child: Text(
+                              '${status.messageFa}\n\n'
+                              '۱) در تنظیمات گوشی → امنیت / قفل صفحه، یک PIN یا الگو بگذار.\n'
+                              '۲) همان‌جا اثرانگشت (یا چهره) ثبت کن.\n'
+                              '۳) در هاوژین اول «قفل با PIN» را روشن کن، بعد سوییچ اثرانگشت.\n\n'
+                              'توجه: اثرانگشت معمولاً در لیست «دسترسی‌های برنامه» دیده نمی‌شود '
+                              'و قابل روشن/خاموش مثل میکروفون نیست — وابسته به امنیت سیستم است.',
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('باشه'),
+                            ),
+                            FilledButton(
+                              onPressed: () async {
+                                Navigator.pop(ctx);
+                                await BiometricService.instance
+                                    .openSystemAppSettings();
+                              },
+                              child: const Text('جزئیات برنامه'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (context.mounted) setState(() {});
+                    },
+                  );
+                },
+              ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('دسترسی‌های برنامه (سیستم)'),
-                subtitle: const Text('برای اثرانگشت و سایر مجوزها'),
+                title: const Text('جزئیات برنامه در تنظیمات سیستم'),
+                subtitle: const Text('میکروفون و مجوزهای runtime — نه اثرانگشت'),
                 leading: const Icon(Icons.app_settings_alt_rounded),
                 onTap: () async {
                   final ok =

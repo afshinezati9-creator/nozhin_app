@@ -4,7 +4,28 @@ import 'package:local_auth/local_auth.dart';
 import 'package:local_auth/error_codes.dart' as auth_error;
 import 'package:permission_handler/permission_handler.dart';
 
+/// وضعیت قابلیت اثرانگشت روی دستگاه
+class BiometricStatus {
+  final bool deviceSupported;
+  final bool canCheck;
+  final bool enrolled;
+  final String messageFa;
+
+  const BiometricStatus({
+    required this.deviceSupported,
+    required this.canCheck,
+    required this.enrolled,
+    required this.messageFa,
+  });
+
+  bool get ready => deviceSupported && canCheck && enrolled;
+}
+
 /// اثرانگشت / Face ID — فقط اندروید/iOS
+///
+/// نکته مهم اندروید: USE_BIOMETRIC مجوز runtime در لیست «دسترسی‌های برنامه»
+/// نیست. کاربر باید در تنظیمات امنیتی گوشی اثرانگشت ثبت کند و قفل صفحه
+/// داشته باشد؛ سپس local_auth از API سیستم استفاده می‌کند.
 class BiometricService {
   BiometricService._();
   static final BiometricService instance = BiometricService._();
@@ -42,7 +63,56 @@ class BiometricService {
     }
   }
 
-  /// باز کردن صفحهٔ دسترسی/جزئیات برنامه در تنظیمات سیستم
+  Future<BiometricStatus> status() async {
+    if (kIsWeb) {
+      return const BiometricStatus(
+        deviceSupported: false,
+        canCheck: false,
+        enrolled: false,
+        messageFa: 'اثرانگشت روی وب کار نمی‌کند؛ روی گوشی اندروید تست کن.',
+      );
+    }
+    try {
+      final supported = await _auth.isDeviceSupported();
+      final can = await _auth.canCheckBiometrics;
+      final types = await _auth.getAvailableBiometrics();
+      final enrolled = types.isNotEmpty;
+
+      if (!supported) {
+        return const BiometricStatus(
+          deviceSupported: false,
+          canCheck: false,
+          enrolled: false,
+          messageFa:
+              'این دستگاه حسگر اثرانگشت/چهره پشتیبانی‌شده ندارد یا قفل صفحه غیرفعال است.',
+        );
+      }
+      if (!enrolled) {
+        return BiometricStatus(
+          deviceSupported: supported,
+          canCheck: can,
+          enrolled: false,
+          messageFa:
+              'اثرانگشت در تنظیمات امنیتی گوشی ثبت نشده. برو به: تنظیمات → امنیت → اثرانگشت و یک اثرانگشت اضافه کن. در «دسترسی‌های برنامه» چیزی برای روشن کردن نیست.',
+        );
+      }
+      return BiometricStatus(
+        deviceSupported: supported,
+        canCheck: can,
+        enrolled: true,
+        messageFa: 'حسگر آماده است (${types.length} روش). می‌توانی قفل بیومتریک را فعال کنی.',
+      );
+    } catch (e) {
+      return BiometricStatus(
+        deviceSupported: false,
+        canCheck: false,
+        enrolled: false,
+        messageFa: 'خطا در بررسی حسگر: $e',
+      );
+    }
+  }
+
+  /// جزئیات برنامه در تنظیمات سیستم (مجوزهای runtime مثل میکروفون)
   Future<bool> openSystemAppSettings() async {
     if (kIsWeb) return false;
     try {
@@ -58,7 +128,7 @@ class BiometricService {
   }) async {
     if (kIsWeb) return false;
     try {
-      return await _auth.authenticate(
+      final ok = await _auth.authenticate(
         localizedReason: reason,
         options: AuthenticationOptions(
           biometricOnly: biometricOnly,
@@ -67,6 +137,7 @@ class BiometricService {
           sensitiveTransaction: false,
         ),
       );
+      return ok;
     } on PlatformException catch (e) {
       // ignore: avoid_print
       print('Biometric PlatformException: ${e.code} ${e.message}');

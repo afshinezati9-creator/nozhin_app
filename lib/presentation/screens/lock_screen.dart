@@ -177,7 +177,7 @@ class _LockScreenState extends State<LockScreen>
   }
 
   void _onDigit(String d) {
-    if (_pin.length >= 6 || _busy) return;
+    if (_pin.length >= 10 || _busy) return;
     setState(() {
       _pin += d;
       _error = null;
@@ -193,7 +193,7 @@ class _LockScreenState extends State<LockScreen>
     if (LockScreen.hashPin(_pin) == stored) {
       if (!mounted) return;
       _goMain();
-    } else if (_pin.length >= 6) {
+    } else if (_pin.length >= 10) {
       setState(() {
         _pin = '';
         _error = 'رمز اشتباه است';
@@ -393,11 +393,22 @@ class _LockScreenState extends State<LockScreen>
                       child: child,
                     );
                   },
-                  child: Directionality(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.brand3.withOpacity(0.35),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Directionality(
                     textDirection: TextDirection.ltr,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(6, (i) {
+                      children: List.generate(10, (i) {
                         final filled = i < _pin.length;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 120),
@@ -420,6 +431,7 @@ class _LockScreenState extends State<LockScreen>
                       }),
                     ),
                   ),
+                    ),
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 14),

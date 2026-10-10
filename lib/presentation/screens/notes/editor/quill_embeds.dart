@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_quill/flutter_quill.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'table_dialog.dart';
@@ -76,33 +79,134 @@ class AudioEmbedBuilder extends EmbedBuilder {
   String get key => 'audio';
 
   @override
+  bool get expanded => false;
+
+  @override
   Widget build(BuildContext context, EmbedContext embedContext) {
     Map<String, dynamic> meta = {};
     try {
       final raw = embedContext.node.value.data;
       if (raw is String) meta = jsonDecode(raw) as Map<String, dynamic>;
     } catch (_) {}
-    final duration = (meta['duration'] as num?)?.toInt() ?? 0;
     return _AudioPlayerCard(
-        durationSec: duration, label: meta['label'] as String?);
+      durationSec: (meta['duration'] as num?)?.toInt() ?? 0,
+      label: meta['label'] as String? ?? 'صوت',
+      path: meta['path'] as String?,
+      dataUrl: meta['data'] as String?,
+    );
   }
 }
 
 class _AudioPlayerCard extends StatefulWidget {
   final int durationSec;
-  final String? label;
-  const _AudioPlayerCard({required this.durationSec, this.label});
+  final String label;
+  final String? path;
+  final String? dataUrl;
+
+  const _AudioPlayerCard({
+    required this.durationSec,
+    required this.label,
+    this.path,
+    this.dataUrl,
+  });
 
   @override
   State<_AudioPlayerCard> createState() => _AudioPlayerCardState();
 }
 
 class _AudioPlayerCardState extends State<_AudioPlayerCard> {
+  final AudioPlayer _player = AudioPlayer();
   bool _playing = false;
-  double _speed = 1.0;
-  int _pos = 0;
+  bool _loading = false;
+  Duration _pos = Duration.zero;
+  Duration _total = Duration.zero;
+  String? _error;
 
-  String _fmt(int s) {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.durationSec > 0) {
+      _total = Duration(seconds: widget.durationSec);
+    }
+    _player.onPositionChanged.listen((d) {
+      if (mounted) setState(() => _pos = d);
+    });
+    _player.onDurationChanged.listen((d) {
+      if (mounted && d.inMilliseconds > 0) setState(() => _total = d);
+    });
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() {
+        _playing = false;
+        _pos = Duration.zero;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    if (_loading) return;
+    if (_playing) {
+      await _player.pause();
+      setState(() => _playing = false);
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      if (_pos == Duration.zero ||
+          _player.state == PlayerState.completed ||
+          _player.state == PlayerState.stopped) {
+        final source = await _resolveSource();
+        if (source == null) {
+          setState(() {
+            _error = 'فایل صوتی پیدا نشد';
+            _loading = false;
+          });
+          return;
+        }
+        await _player.play(source);
+      } else {
+        await _player.resume();
+      }
+      setState(() {
+        _playing = true;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'پخش ممکن نیست';
+        _loading = false;
+        _playing = false;
+      });
+    }
+  }
+
+  Future<Source?> _resolveSource() async {
+    final data = widget.dataUrl;
+    if (data != null && data.startsWith('data:')) {
+      try {
+        final b64 = data.split(',').last;
+        final bytes = base64Decode(b64);
+        return BytesSource(bytes);
+      } catch (_) {}
+    }
+    final path = widget.path;
+    if (path != null && path.isNotEmpty && !kIsWeb) {
+      final f = File(path);
+      if (await f.exists()) return DeviceFileSource(path);
+    }
+    return null;
+  }
+
+  String _fmt(Duration d) {
+    final s = d.inSeconds;
     final m = (s ~/ 60).toString().padLeft(2, '0');
     final sec = (s % 60).toString().padLeft(2, '0');
     return '$m:$sec';
@@ -111,7 +215,8 @@ class _AudioPlayerCardState extends State<_AudioPlayerCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final total = widget.durationSec.clamp(1, 9999);
+    final totalMs = _total.inMilliseconds <= 0 ? 1 : _total.inMilliseconds;
+    final progress = (_pos.inMilliseconds / totalMs).clamp(0.0, 1.0);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -134,35 +239,25 @@ class _AudioPlayerCardState extends State<_AudioPlayerCard> {
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () {
-                    setState(() {
-                      _playing = !_playing;
-                      if (_playing && _pos >= total) _pos = 0;
-                    });
-                    if (_playing) {
-                      Future.doWhile(() async {
-                        await Future.delayed(
-                            Duration(milliseconds: (1000 / _speed).round()));
-                        if (!_playing || !mounted) return false;
-                        setState(() {
-                          _pos++;
-                          if (_pos >= total) {
-                            _playing = false;
-                            _pos = total;
-                          }
-                        });
-                        return _playing;
-                      });
-                    }
-                  },
+                  onTap: _toggle,
                   child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(
-                      _playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
+                    width: 48,
+                    height: 48,
+                    child: _loading
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(
+                            _playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                   ),
                 ),
               ),
@@ -171,36 +266,22 @@ class _AudioPlayerCardState extends State<_AudioPlayerCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.label ?? 'ضبط صوتی',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    Text('${_fmt(_pos)} / ${_fmt(total)}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.5),
-                        )),
+                    Text(
+                      widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_fmt(_pos)} / ${_fmt(_total.inMilliseconds > 0 ? _total : Duration(seconds: widget.durationSec.clamp(0, 9999)))}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.55),
+                      ),
+                    ),
                   ],
-                ),
-              ),
-              PopupMenuButton<double>(
-                initialValue: _speed,
-                onSelected: (v) => setState(() => _speed = v),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 0.5, child: Text('۰.۵×')),
-                  PopupMenuItem(value: 0.75, child: Text('۰.۷۵×')),
-                  PopupMenuItem(value: 1.0, child: Text('۱×')),
-                  PopupMenuItem(value: 1.5, child: Text('۱.۵×')),
-                  PopupMenuItem(value: 2.0, child: Text('۲×')),
-                ],
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text('${_speed}×',
-                      style: theme.textTheme.labelMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
@@ -209,12 +290,23 @@ class _AudioPlayerCardState extends State<_AudioPlayerCard> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: _pos / total,
-              minHeight: 5,
-              backgroundColor: theme.colorScheme.outline.withOpacity(0.3),
+              value: progress,
+              minHeight: 4,
+              backgroundColor: theme.colorScheme.outline.withOpacity(0.25),
               color: AppColors.brand3,
             ),
           ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: const TextStyle(
+                color: Color(0xFFEF4444),
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ],
       ),
     );

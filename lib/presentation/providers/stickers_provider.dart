@@ -74,17 +74,17 @@ class StickersNotifier extends StateNotifier<StickersState> {
         list = [
           StickerSurface(
             id: _repo.newId(),
-            name: 'کاغذ سفید',
+            name: 'مهم‌ترین کارها',
             type: SurfaceType.board,
           ),
           StickerSurface(
             id: _repo.newId(),
-            name: 'چوب‌پنبه',
+            name: 'امروز',
             type: SurfaceType.cork,
           ),
           StickerSurface(
             id: _repo.newId(),
-            name: 'میز کار',
+            name: 'خرید و کارها',
             type: SurfaceType.desk,
           ),
         ];
