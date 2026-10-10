@@ -121,8 +121,8 @@ class _LockScreenState extends State<LockScreen>
     HapticFeedback.selectionClick();
 
     final ok = await BiometricService.instance.authenticate(
-      reason: 'انگشت را روی حسگر بگذار تا هاوژین باز شود',
-      biometricOnly: false,
+      reason: 'برای باز کردن هاوژین، اثر انگشت یا چهره را تأیید کن',
+      biometricOnly: true,
     );
     if (!mounted) return;
 
