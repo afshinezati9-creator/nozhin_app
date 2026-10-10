@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import '../../core/theme/app_colors.dart';
 import '../../core/security/secure_storage_service.dart';
 import '../../core/security/biometric_service.dart';
@@ -13,14 +14,24 @@ class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
 
   static String hashPin(String pin) {
+    final digest = crypto.sha256.convert('hawzhin_pin_v2:$pin'.codeUnits);
+    return 'sha256:$digest';
+  }
+
+  static String _legacyHashPin(String pin) {
     var h = 0x811c9dc5;
-    final data = 'nozhin_v1_$pin'.codeUnits;
-    for (final c in data) {
+    for (final c in 'nozhin_v1_$pin'.codeUnits) {
       h ^= c;
       h = (h * 0x01000193) & 0x7fffffff;
     }
     return h.toRadixString(16).padLeft(8, '0');
   }
+
+  static bool matchesPin(String pin, String storedHash) =>
+      storedHash == hashPin(pin) || storedHash == _legacyHashPin(pin);
+
+  static bool isLegacyHash(String storedHash) =>
+      !storedHash.startsWith('sha256:');
 
   @override
   State<LockScreen> createState() => _LockScreenState();
@@ -161,9 +172,12 @@ class _LockScreenState extends State<LockScreen>
       _error = null;
     });
     final stored = await SecureStorageService.instance.getAppLockPinHash();
-    final ok = stored != null && stored == LockScreen.hashPin(_pin);
+    final ok = stored != null && LockScreen.matchesPin(_pin, stored);
     if (!mounted) return;
     if (ok) {
+      if (stored != null && LockScreen.isLegacyHash(stored)) {
+        await SecureStorageService.instance.saveAppLockPinHash(LockScreen.hashPin(_pin));
+      }
       _goMain();
     } else {
       setState(() {
@@ -190,7 +204,10 @@ class _LockScreenState extends State<LockScreen>
   Future<void> _tryAuto() async {
     final stored = await SecureStorageService.instance.getAppLockPinHash();
     if (stored == null) return;
-    if (LockScreen.hashPin(_pin) == stored) {
+    if (LockScreen.matchesPin(_pin, stored)) {
+      if (LockScreen.isLegacyHash(stored)) {
+        await SecureStorageService.instance.saveAppLockPinHash(LockScreen.hashPin(_pin));
+      }
       if (!mounted) return;
       _goMain();
     } else if (_pin.length >= 10) {
