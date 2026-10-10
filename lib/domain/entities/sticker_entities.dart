@@ -1,21 +1,33 @@
 import 'package:equatable/equatable.dart';
 
-/// انواع پس‌زمینه سطح (صحنه)
+/// انواع پس‌زمینه سطح — نام‌ها یکتا، ظاهر متنوع
 enum SurfaceType {
-  wall('wall', 'کاغذ دیواری تیره'),
-  desk('desk', 'چوب'),
-  fridge('fridge', 'سفید'),
-  board('board', 'کاغذ سفید'),
-  door('door', 'چوب تیره'),
-  car('car', 'تیره مات'),
-  cabinet('cabinet', 'چوب قهوه‌ای'),
-  mirror('mirror', 'خاکستری تیره');
+  wall('wall', 'دیوار ملایم'),
+  desk('desk', 'میز بلوط'),
+  board('board', 'تخته مات'),
+  cork('cork', 'چوب‌پنبه'),
+  door('door', 'چوب گردو'),
+  dusk('dusk', 'غروب'),
+  ocean('ocean', 'اقیانوس'),
+  forest('forest', 'جنگل');
 
   const SurfaceType(this.id, this.label);
   final String id;
   final String label;
 
   static SurfaceType fromId(String? id) {
+    // سازگاری با داده‌های قدیمی
+    switch (id) {
+      case 'fridge':
+      case 'mirror':
+        return SurfaceType.board;
+      case 'car':
+        return SurfaceType.ocean;
+      case 'cabinet':
+        return SurfaceType.door;
+      default:
+        break;
+    }
     return SurfaceType.values.firstWhere(
       (e) => e.id == id,
       orElse: () => SurfaceType.wall,

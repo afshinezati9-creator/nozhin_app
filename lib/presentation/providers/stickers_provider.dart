@@ -79,8 +79,8 @@ class StickersNotifier extends StateNotifier<StickersState> {
           ),
           StickerSurface(
             id: _repo.newId(),
-            name: 'یخچال',
-            type: SurfaceType.fridge,
+            name: 'چوب‌پنبه',
+            type: SurfaceType.cork,
           ),
           StickerSurface(
             id: _repo.newId(),

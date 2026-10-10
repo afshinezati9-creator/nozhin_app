@@ -11,9 +11,12 @@ class AppConstants {
   static const String developerName = 'افشین عزتی';
   static const String developerNameEn = 'Afshin Ezzati';
   static const String supportEmail = 'afshinezati9@gmail.com';
+  /// کارت بانکی — فقط بعد از لمس کاربر در UI نشان داده می‌شود
+  static const String supportCardNumber = '6219861939293428';
   static const String aboutBlurb =
-      'هاوژین یک اپ آفلاین برای دفترچه، مالی، دم‌دستی و استیکی‌نت است؛ '
-      'با تمرکز روی سرعت، حریم خصوصی و تجربهٔ فارسی.';
+      'هاوژین را برای کار روزمره خودم و اطرافیانم نوشتم: یادداشت، حساب‌وکتاب، '
+      'اطلاعات دم‌دست و برچسب‌های روی میز کار. همه چیز روی گوشی می‌ماند و '
+      'برای باز شدن به اینترنت وابسته نیست.';
 
   // Storage keys
   static const String keyThemeMode = 'theme_mode';

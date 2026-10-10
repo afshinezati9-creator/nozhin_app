@@ -372,79 +372,116 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      AppColors.brand3.withOpacity(0.16),
-                      AppColors.brand2.withOpacity(0.08),
+                      AppColors.brand3.withOpacity(0.14),
+                      AppColors.brand2.withOpacity(0.07),
                       theme.colorScheme.surfaceContainerHighest,
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.brand3.withOpacity(0.25),
+                    color: AppColors.brand3.withOpacity(0.22),
                   ),
                 ),
                 child: Column(
                   children: [
                     const HawzhinLogo(
-                      size: 72,
+                      size: 68,
                       variant: HawzhinLogoVariant.bookLeaf,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
                       AppConstants.appName,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
+                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       AppConstants.appNameEn,
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: AppColors.brand3,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: 2,
+                        letterSpacing: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.brand3.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'نسخه ${AppConstants.appVersion}  ·  بیلد ${AppConstants.appBuild}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.brand3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
-                      AppConstants.appTagline,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      'نسخه ${AppConstants.appVersion}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface.withOpacity(0.55),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 14),
                     Text(
                       AppConstants.aboutBlurb,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        height: 1.55,
-                        color: theme.colorScheme.onSurface.withOpacity(0.72),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        height: 1.6,
+                        color: theme.colorScheme.onSurface.withOpacity(0.82),
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
+                    // قابلیت‌ها و کاربرد
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: theme.colorScheme.outline),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'چه کارهایی می‌توانی بکنی',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          _AboutFeature(
+                            icon: Icons.menu_book_rounded,
+                            title: 'دفترچه',
+                            body:
+                                'یادداشت با قالب‌بندی، تصویر، جدول و دسته‌بندی؛ ذخیره روی خود گوشی.',
+                          ),
+                          _AboutFeature(
+                            icon: Icons.account_balance_wallet_rounded,
+                            title: 'مالی',
+                            body:
+                                'حساب، تراکنش، بودجه، بدهی، اقساط، هدف و لیست قصد خرید — بدون اتصال ابری.',
+                          ),
+                          _AboutFeature(
+                            icon: Icons.contact_page_outlined,
+                            title: 'دم‌دستی',
+                            body:
+                                'کارت بانکی، آدرس، کد، لینک و یادداشت‌های حساس با کپی سریع.',
+                          ),
+                          _AboutFeature(
+                            icon: Icons.sticky_note_2_outlined,
+                            title: 'استیکی‌نت',
+                            body:
+                                'برچسب روی سطوح مختلف با چک‌لیست؛ مناسب کار روزانه و یادآوری.',
+                          ),
+                          _AboutFeature(
+                            icon: Icons.lock_rounded,
+                            title: 'قفل',
+                            body:
+                                'PIN و در صورت پشتیبانی گوشی، اثرانگشت/چهره برای ورود.',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     // سازنده
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surface.withOpacity(0.85),
+                        color: theme.colorScheme.surface.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: theme.colorScheme.outline),
                       ),
@@ -468,12 +505,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'سازنده',
+                                      'توسعه‌دهنده',
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
                                         color: theme.colorScheme.onSurface
-                                            .withOpacity(0.55),
-                                        fontWeight: FontWeight.w600,
+                                            .withOpacity(0.5),
                                       ),
                                     ),
                                     Text(
@@ -498,12 +534,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'هر نقد، پیشنهاد، گزارش باگ یا ایده برای هاوژین را به این ایمیل بفرستید. پیام‌ها خوانده می‌شوند.',
+                            'اگر باگ دیدی، جایی گیر کردی، یا ایده‌ای برای نسخه بعد داری، مستقیم بنویس. ترجیح می‌دهم بازخورد واقعی بگیرم تا حدس بزنم.',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              height: 1.5,
+                              height: 1.55,
                               color: theme.colorScheme.onSurface
-                                  .withOpacity(0.7),
+                                  .withOpacity(0.72),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -515,8 +551,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   scheme: 'mailto',
                                   path: AppConstants.supportEmail,
                                   queryParameters: {
-                                    'subject':
-                                        'هاوژین — بازخورد / باگ / پیشنهاد',
+                                    'subject': 'هاوژین — بازخورد',
                                   },
                                 );
                                 try {
@@ -525,7 +560,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                            'ایمیل: ${AppConstants.supportEmail}'),
+                                            AppConstants.supportEmail),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -535,7 +570,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                            'ایمیل: ${AppConstants.supportEmail}'),
+                                            AppConstants.supportEmail),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -554,20 +589,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               label: Text(
                                 AppConstants.supportEmail,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                    fontWeight: FontWeight.w800),
                               ),
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          // حمایت مالی — شماره بعد از ضربه
+                          _SupportCardTile(
+                            cardNumber: AppConstants.supportCardNumber,
+                          ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'ساخته‌شده با دقت برای کاربران فارسی‌زبان · کاملاً آفلاین',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.45),
                       ),
                     ),
                   ],
@@ -996,6 +1027,156 @@ class _SettingsAction extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AboutFeature extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String body;
+  const _AboutFeature({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.brand3.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.brand3),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    height: 1.45,
+                    color: theme.colorScheme.onSurface.withOpacity(0.68),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportCardTile extends StatefulWidget {
+  final String cardNumber;
+  const _SupportCardTile({required this.cardNumber});
+
+  @override
+  State<_SupportCardTile> createState() => _SupportCardTileState();
+}
+
+class _SupportCardTileState extends State<_SupportCardTile> {
+  bool _revealed = false;
+
+  String get _masked {
+    final n = widget.cardNumber.replaceAll(' ', '');
+    if (n.length < 8) return '•••• •••• •••• ••••';
+    return '•••• •••• •••• ${n.substring(n.length - 4)}';
+  }
+
+  String get _grouped {
+    final n = widget.cardNumber.replaceAll(' ', '');
+    final buf = StringBuffer();
+    for (var i = 0; i < n.length; i++) {
+      if (i > 0 && i % 4 == 0) buf.write(' ');
+      buf.write(n[i]);
+    }
+    return buf.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          if (!_revealed) {
+            setState(() => _revealed = true);
+            return;
+          }
+          await Clipboard.setData(ClipboardData(text: widget.cardNumber));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('شماره کارت کپی شد'),
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              Icon(Icons.favorite_outline_rounded,
+                  color: AppColors.brand3, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'حمایت مالی از توسعه‌دهنده',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _revealed
+                          ? _grouped
+                          : 'برای نمایش شماره کارت ضربه بزن · ضربه دوباره = کپی',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        letterSpacing: _revealed ? 0.8 : 0,
+                        color: theme.colorScheme.onSurface.withOpacity(0.65),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                _revealed ? Icons.copy_rounded : Icons.visibility_outlined,
+                size: 20,
+                color: theme.colorScheme.onSurface.withOpacity(0.45),
+              ),
+            ],
           ),
         ),
       ),
