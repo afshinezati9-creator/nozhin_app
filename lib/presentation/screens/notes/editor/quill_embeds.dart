@@ -198,9 +198,14 @@ class _AudioPlayerCardState extends State<_AudioPlayerCard> {
       } catch (_) {}
     }
     final path = widget.path;
-    if (path != null && path.isNotEmpty && !kIsWeb) {
-      final f = File(path);
-      if (await f.exists()) return DeviceFileSource(path);
+    if (path != null && path.isNotEmpty) {
+      if (kIsWeb && (path.startsWith('blob:') || path.startsWith('http'))) {
+        return UrlSource(path);
+      }
+      if (!kIsWeb) {
+        final f = File(path);
+        if (await f.exists()) return DeviceFileSource(path);
+      }
     }
     return null;
   }
