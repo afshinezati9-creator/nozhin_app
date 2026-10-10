@@ -1,8 +1,7 @@
 name: Flutter CI
 
 on:
-  push:
-    branches: [main, master]
+  # Kept for manual recovery only; automated builds use hawzhin-apk.yml.
   workflow_dispatch:
 
 concurrency:
