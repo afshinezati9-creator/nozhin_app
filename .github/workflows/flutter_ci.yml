@@ -43,27 +43,33 @@ jobs:
         run: flutter doctor -v || true
 
       # release + یک ABI برای حجم کمتر؛ arm64 اکثر گوشی‌های جدید
-      - name: Configure release signing (optional)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' && secrets.ANDROID_STORE_PASSWORD != '' }}
+      - name: Detect release signing secrets
+        id: signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
-          cat > android/key.properties <<EOF
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ] && [ -n "$ANDROID_STORE_PASSWORD" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+            cat > android/key.properties <<EOF
           storeFile=upload-keystore.jks
           storePassword=$ANDROID_STORE_PASSWORD
           keyAlias=$ANDROID_KEY_ALIAS
           keyPassword=$ANDROID_KEY_PASSWORD
           EOF
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "No release keystore secrets configured; APK will be test-only."
+          fi
 
       - name: Build release APK (arm64)
         run: flutter build apk --release --target-platform android-arm64 --split-per-abi
 
       - name: Build store-signed Android App Bundle
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' && secrets.ANDROID_STORE_PASSWORD != '' }}
+        if: steps.signing.outputs.enabled == 'true'
         run: flutter build appbundle --release
 
       - name: Rename APK
