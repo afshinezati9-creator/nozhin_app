@@ -298,95 +298,120 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   );
                 },
               ),
-              FutureBuilder<BiometricStatus>(
-                future: BiometricService.instance.status(),
-                builder: (context, st) {
-                  final s = st.data;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('وضعیت اثرانگشت روی این دستگاه'),
-                    subtitle: Text(
-                      s?.messageFa ??
-                          (kIsWeb
+              // احراز هویت بیومتریک؛ تأیید نهایی را خود سیستم‌عامل نمایش می‌دهد.
+              FutureBuilder<bool>(
+                future: SecureStorageService.instance.getAppLockEnabled(),
+                builder: (context, snap) {
+                  final pinOn = snap.data ?? false;
+                  return FutureBuilder<bool>(
+                    future: SecureStorageService.instance.getBiometricLockEnabled(),
+                    builder: (context, bioSnap) {
+                      final bioOn = bioSnap.data ?? false;
+                      return SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('باز شدن با اثر انگشت / چهره'),
+                        subtitle: Text(
+                          kIsWeb
                               ? 'روی وب در دسترس نیست'
-                              : 'در حال بررسی حسگر...'),
-                    ),
-                    leading: Icon(
-                      (s?.ready ?? false)
-                          ? Icons.fingerprint_rounded
-                          : Icons.fingerprint_outlined,
-                      color: (s?.ready ?? false)
-                          ? AppColors.brand3
-                          : theme.colorScheme.onSurface.withOpacity(0.45),
-                    ),
-                    onTap: () async {
-                      final status = await BiometricService.instance.status();
-                      if (!context.mounted) return;
-                      await showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('اثرانگشت چگونه فعال می‌شود؟'),
-                          content: SingleChildScrollView(
-                            child: Text(
-                              '${status.messageFa}\n\n'
-                              '۱) در تنظیمات گوشی → امنیت / قفل صفحه، یک PIN یا الگو بگذار.\n'
-                              '۲) همان‌جا اثرانگشت (یا چهره) ثبت کن.\n'
-                              '۳) در هاوژین اول «قفل با PIN» را روشن کن، بعد سوییچ اثرانگشت.\n\n'
-                              'توجه: اثرانگشت معمولاً در لیست «دسترسی‌های برنامه» دیده نمی‌شود '
-                              'و قابل روشن/خاموش مثل میکروفون نیست — وابسته به امنیت سیستم است.',
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('باشه'),
-                            ),
-                            FilledButton(
-                              onPressed: () async {
-                                Navigator.pop(ctx);
-                                await BiometricService.instance
-                                    .openSystemAppSettings();
-                              },
-                              child: const Text('جزئیات برنامه'),
-                            ),
-                          ],
+                              : (!pinOn
+                                  ? 'برای استفاده، ابتدا قفل PIN را فعال کن'
+                                  : (bioOn
+                                      ? 'فعال — تأیید بیومتریک هنگام ورود'
+                                      : 'پس از تأیید شما و احراز هویت سیستم فعال می‌شود')),
                         ),
+                        value: bioOn && pinOn && !kIsWeb,
+                        activeThumbColor: AppColors.brand3,
+                        onChanged: (kIsWeb || !pinOn)
+                            ? null
+                            : (enabled) async {
+                                if (!enabled) {
+                                  await SecureStorageService.instance
+                                      .saveBiometricLockEnabled(false);
+                                  if (context.mounted) setState(() {});
+                                  return;
+                                }
+
+                                final status =
+                                    await BiometricService.instance.status();
+                                if (!context.mounted) return;
+                                if (!status.ready) {
+                                  await showDialog<void>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('اثر انگشت آماده نیست'),
+                                      content: Text(
+                                        '${status.messageFa}\n\n'
+                                        'ابتدا در تنظیمات امنیتی خود گوشی قفل صفحه و اثر انگشت/چهره را ثبت کن؛ '
+                                        'این قابلیت در مجوزهای معمول برنامه روشن نمی‌شود.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text('متوجه شدم'),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () async {
+                                            Navigator.pop(ctx);
+                                            await BiometricService.instance
+                                                .openSystemAppSettings();
+                                          },
+                                          child: const Text('تنظیمات برنامه'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                final consent = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('فعال‌سازی ورود بیومتریک'),
+                                    content: const Text(
+                                      'برای فعال شدن ورود با اثر انگشت/چهره، اجازه می‌دهی سیستم‌عامل هویتت را بررسی کند؟ '
+                                      'اطلاعات بیومتریک در اختیار هاوژین قرار نمی‌گیرد.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
+                                        child: const Text('انصراف'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
+                                        child: const Text('ادامه و تأیید'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (consent != true || !context.mounted) return;
+
+                                final authenticated =
+                                    await BiometricService.instance.authenticate(
+                                  reason:
+                                      'برای فعال‌سازی ورود بیومتریک، هویت خود را تأیید کن',
+                                  biometricOnly: true,
+                                );
+                                if (!context.mounted) return;
+                                if (!authenticated) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'تأیید بیومتریک انجام نشد؛ قابلیت فعال نشده است.',
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                await SecureStorageService.instance
+                                    .saveBiometricLockEnabled(true);
+                                if (context.mounted) setState(() {});
+                              },
                       );
-                      if (context.mounted) setState(() {});
                     },
                   );
-                },
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.tune_rounded),
-                title: const Text('تنظیم دسترسی‌های هاوژین'),
-                subtitle: const Text('مدیریت مجوز میکروفون و سایر دسترسی‌ها در تنظیمات گوشی'),
-                trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                onTap: () async {
-                  if (kIsWeb) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('تنظیمات مجوزها فقط در نسخه موبایل در دسترس است')),
-                    );
-                    return;
-                  }
-                  await BiometricService.instance.openSystemAppSettings();
-                },
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('جزئیات برنامه در تنظیمات سیستم'),
-                subtitle: const Text('میکروفون و مجوزهای runtime — نه اثرانگشت'),
-                leading: const Icon(Icons.app_settings_alt_rounded),
-                onTap: () async {
-                  final ok =
-                      await BiometricService.instance.openSystemAppSettings();
-                  if (!ok && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('نتوانست تنظیمات سیستم را باز کند'),
-                      behavior: SnackBarBehavior.fixed,
-                    ));
-                  }
                 },
               ),
               ListTile(
@@ -1254,9 +1279,14 @@ class _SupportCardTileState extends State<_SupportCardTile> {
                       _revealed
                           ? _grouped
                           : 'برای نمایش شماره کارت ضربه بزن · ضربه دوباره = کپی',
+                      textDirection:
+                          _revealed ? TextDirection.ltr : TextDirection.rtl,
+                      textAlign: _revealed ? TextAlign.left : TextAlign.start,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontFeatures: const [FontFeature.tabularFigures()],
-                        letterSpacing: _revealed ? 0.8 : 0,
+                        letterSpacing: _revealed ? 1.1 : 0,
+                        fontWeight:
+                            _revealed ? FontWeight.w800 : FontWeight.normal,
                         color: theme.colorScheme.onSurface.withOpacity(0.65),
                       ),
                     ),
