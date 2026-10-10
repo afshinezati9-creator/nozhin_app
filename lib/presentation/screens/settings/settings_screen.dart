@@ -658,44 +658,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
           title: const Text('تنظیم PIN'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: c1,
-                keyboardType: TextInputType.number,
-                obscureText: !show1,
-                maxLength: 6,
-                decoration: InputDecoration(
-                  labelText: 'PIN (۴ تا ۶ رقم)',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      show1
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed: () => setLocal(() => show1 = !show1),
-                  ),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'یک رمز عددی ۴ تا ۱۰ رقمی انتخاب کن.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(ctx).textTheme.bodySmall,
                 ),
-              ),
-              TextField(
-                controller: c2,
-                keyboardType: TextInputType.number,
-                obscureText: !show2,
-                maxLength: 6,
-                decoration: InputDecoration(
-                  labelText: 'تکرار PIN',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      show2
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed: () => setLocal(() => show2 = !show2),
+                const SizedBox(height: 16),
+                // ترتیب فیلدها معکوس شده تا ابتدا تکرار و سپس PIN وارد شود.
+                TextField(
+                  controller: c2,
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  obscureText: !show2,
+                  maxLength: 10,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 4,
                   ),
+                  decoration: InputDecoration(
+                    labelText: 'تکرار PIN',
+                    counterText: '${c2.text.length}/10',
+                    filled: true,
+                    prefixIcon: const Icon(Icons.password_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: show2 ? 'پنهان کردن رمز' : 'نمایش رمز',
+                      icon: Icon(show2
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined),
+                      onPressed: () => setLocal(() => show2 = !show2),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onChanged: (_) => setLocal(() {}),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                TextField(
+                  controller: c1,
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  obscureText: !show1,
+                  maxLength: 10,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 4,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'PIN جدید',
+                    counterText: '${c1.text.length}/10',
+                    filled: true,
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: show1 ? 'پنهان کردن رمز' : 'نمایش رمز',
+                      icon: Icon(show1
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined),
+                      onPressed: () => setLocal(() => show1 = !show1),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onChanged: (_) => setLocal(() {}),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -705,9 +744,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: () {
                 final a = c1.text.trim();
                 final b = c2.text.trim();
-                if (a.length < 4 || a.length > 6) {
+                if (a.length < 4 || a.length > 10) {
                   ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                    content: Text('۴ تا ۶ رقم لازم است'),
+                    content: Text('رمز باید بین ۴ تا ۱۰ رقم باشد'),
                     behavior: SnackBarBehavior.fixed,
                   ));
                   return;
