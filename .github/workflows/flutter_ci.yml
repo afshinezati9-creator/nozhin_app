@@ -33,6 +33,12 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      - name: Analyze Dart sources
+        run: flutter analyze --no-pub
+
+      - name: Run tests
+        run: flutter test --no-pub
+
       - name: Doctor (info)
         run: flutter doctor -v || true
 
