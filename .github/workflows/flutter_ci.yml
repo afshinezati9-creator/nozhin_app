@@ -43,8 +43,28 @@ jobs:
         run: flutter doctor -v || true
 
       # release + یک ABI برای حجم کمتر؛ arm64 اکثر گوشی‌های جدید
+      - name: Configure release signing (optional)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' && secrets.ANDROID_STORE_PASSWORD != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
       - name: Build release APK (arm64)
         run: flutter build apk --release --target-platform android-arm64 --split-per-abi
+
+      - name: Build store-signed Android App Bundle
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' && secrets.ANDROID_STORE_PASSWORD != '' }}
+        run: flutter build appbundle --release
 
       - name: Rename APK
         run: |
@@ -55,10 +75,19 @@ jobs:
           ls -lh build/app/outputs/flutter-apk/
           echo "APK_NAME=$OUT" >> $GITHUB_ENV
 
-      - name: Upload APK artifact
+      - name: Upload APK artifact (debug-signed if no keystore secrets)
         uses: actions/upload-artifact@v4
         with:
           name: Hawzhin-APK
           path: build/app/outputs/flutter-apk/Hawzhin-*.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload store-signed AAB
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' && secrets.ANDROID_STORE_PASSWORD != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hawzhin-Store-AAB
+          path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
           if-no-files-found: error
