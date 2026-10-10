@@ -47,8 +47,9 @@ class BiometricService {
       final supported = await _auth.isDeviceSupported();
       if (!supported) return false;
       final canBio = await _auth.canCheckBiometrics;
-      if (canBio) return true;
-      return supported;
+      if (!canBio) return false;
+      final enrolled = await _auth.getAvailableBiometrics();
+      return enrolled.isNotEmpty;
     } catch (_) {
       return false;
     }
