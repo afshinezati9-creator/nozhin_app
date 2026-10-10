@@ -1,0 +1,58 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: flutter-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-apk:
+    name: Build Hawzhin Release APK
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Doctor (info)
+        run: flutter doctor -v || true
+
+      # release + یک ABI برای حجم کمتر؛ arm64 اکثر گوشی‌های جدید
+      - name: Build release APK (arm64)
+        run: flutter build apk --release --target-platform android-arm64 --split-per-abi
+
+      - name: Rename APK
+        run: |
+          VER=$(grep '^version:' pubspec.yaml | head -1 | sed 's/version: //;s/+.*//')
+          SRC=$(ls build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | head -1)
+          OUT="Hawzhin-${VER}.apk"
+          cp "$SRC" "build/app/outputs/flutter-apk/$OUT"
+          ls -lh build/app/outputs/flutter-apk/
+          echo "APK_NAME=$OUT" >> $GITHUB_ENV
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hawzhin-APK
+          path: build/app/outputs/flutter-apk/Hawzhin-*.apk
+          retention-days: 30
+          if-no-files-found: error
