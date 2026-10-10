@@ -345,17 +345,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         'این قابلیت در مجوزهای معمول برنامه روشن نمی‌شود.',
                                       ),
                                       actions: [
-                                        TextButton(
+                                        FilledButton(
                                           onPressed: () => Navigator.pop(ctx),
                                           child: const Text('متوجه شدم'),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () async {
-                                            Navigator.pop(ctx);
-                                            await BiometricService.instance
-                                                .openSystemAppSettings();
-                                          },
-                                          child: const Text('تنظیمات برنامه'),
                                         ),
                                       ],
                                     ),
