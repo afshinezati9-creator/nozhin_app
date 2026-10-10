@@ -359,6 +359,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.tune_rounded),
+                title: const Text('تنظیم دسترسی‌های هاوژین'),
+                subtitle: const Text('مدیریت مجوز میکروفون و سایر دسترسی‌ها در تنظیمات گوشی'),
+                trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                onTap: () async {
+                  if (kIsWeb) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تنظیمات مجوزها فقط در نسخه موبایل در دسترس است')),
+                    );
+                    return;
+                  }
+                  await BiometricService.instance.openSystemAppSettings();
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
                 title: const Text('جزئیات برنامه در تنظیمات سیستم'),
                 subtitle: const Text('میکروفون و مجوزهای runtime — نه اثرانگشت'),
                 leading: const Icon(Icons.app_settings_alt_rounded),
