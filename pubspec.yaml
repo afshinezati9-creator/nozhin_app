@@ -49,6 +49,9 @@ dev_dependencies:
   json_serializable: ^6.8.0
 
 dependency_overrides:
+  # Align record's Linux implementation with the newer platform interface.
+  # Without this, record_linux 0.7.2 fails compilation with record 5.2.1.
+  record_linux: ^1.3.1
   # حل تعارض intl بین flutter_localizations و flutter_quill
   intl: ^0.20.2
 
